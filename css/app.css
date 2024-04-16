@@ -1,5 +1,5 @@
 .layout {
-    
+    font-family: monospace;
 }
 
 .layout-row {
@@ -31,7 +31,7 @@
 }
 
 .bitboard button[type='colbutton'] {
-    margin-left: 0.69rem;
+    margin-left: 0.75rem;
     padding: 5px;
     margin-bottom: 0.8rem;
 }
@@ -43,6 +43,7 @@
 }
 
 .input-row {
+    font-family: monospace;
     align-content: flex-end;
 }
 

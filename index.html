@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <title>Bitboard Viewer</title>
-        <meta name="description" content="Bitboard viewer for chess engine developers - supports decimal, hexadecimal and binary numbers with four available layouts.">
+        <title>Ataxx Bitboard Viewer</title>
+        <meta name="description" content="Bitboard viewer for ataxx engine developers - supports decimal, hexadecimal and binary numbers with two available layouts.">
         <meta name="author" content="Tearth">
         <meta charset="utf-8">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -10,12 +10,12 @@
     </head>
     <body>
         <div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
-            <h5 class="my-0 mr-md-auto font-weight-normal">Bitboard Viewer</h5>
+            <h5 class="my-0 mr-md-auto font-weight-normal">Ataxx Bitboard Viewer</h5>
             <nav class="my-2 my-md-0 mr-md-3">
                 <a class="p-2 text-dark" href="https://www.chessprogramming.org/Bitboards">What is bitboard?</a>
-                <a class="p-2 text-dark" href="https://www.chessprogramming.org/Main_Page">Chess Programming Wiki</a>
-                <a class="p-2 text-dark" href="https://github.com/Tearth/Bitboard-Viewer">Source code</a>
-				<a class="p-2 text-dark" href="https://github.com/Tearth/Bitboard-Viewer/issues">Report a bug</a>
+                <a class="p-2 text-dark" href="https://en.wikipedia.org/wiki/Ataxx">Ataxx</a>
+                <a class="p-2 text-dark" href="https://github.com/raklaptudirm/Bitboard-Viewer">Source code</a>
+				<a class="p-2 text-dark" href="https://github.com/raklaptudirm/Bitboard-Viewer/issues">Report a bug</a>
             </nav>
         </div>
         <div id="container" class="container" style="display: none">
@@ -36,24 +36,6 @@
                             <label class="no-bottom-margin">Layout 2</label>
                         </div>
                         <div id="layout2" class="layout"></div>
-                    </div>
-                </div>
-                <div class="card mb-4 box-shadow small-bottom-margin">
-                    <div class="card-body small-padding">
-                        <div class="radio-row">
-                            <input type="radio" id="layoutRadio3" name="radioLayout" value="3">
-                            <label class="no-bottom-margin">Layout 3</label>
-                        </div>
-                        <div id="layout3" class="layout"></div>
-                    </div>
-                </div>
-                <div class="card mb-4 box-shadow small-bottom-margin">
-                    <div class="card-body small-padding">
-                        <div class="radio-row">
-                            <input type="radio" id="layoutRadio4" name="radioLayout" value="4">
-                            <label class="no-bottom-margin">Layout 4</label>
-                        </div>
-                        <div id="layout4" class="layout"></div>
                     </div>
                 </div>
             </div>

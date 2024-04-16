@@ -3,8 +3,6 @@ let selectedLayout = 1;
 $(document).ready(function() {
     generateLayout($('#layout1'), 1);
     generateLayout($('#layout2'), 2);
-    generateLayout($('#layout3'), 3);
-    generateLayout($('#layout4'), 4);
     
     generateBitboard($('#bitboard1'), $('#decBitboard1'), false);
     generateBitboard($('#bitboard2'), $('#decBitboard2'), false);
@@ -15,8 +13,6 @@ $(document).ready(function() {
     
     $('#layoutRadio1').click(() => changeLayout(1));
     $('#layoutRadio2').click(() => changeLayout(2));
-    $('#layoutRadio3').click(() => changeLayout(3));
-    $('#layoutRadio4').click(() => changeLayout(4));
     
     $('#decBitboard1').keyup(() => decKeyUp($('#bitboard1'), $('#decBitboard1'), $('#hexBitboard1'), $('#binBitboard1')));
     $('#hexBitboard1').keyup(() => hexKeyUp($('#bitboard1'), $('#decBitboard1'), $('#hexBitboard1'), $('#binBitboard1')));
@@ -51,14 +47,16 @@ $(document).ready(function() {
 });
 
 function generateLayout(layout, variant) {
-    for (var y = 0; y < 8; y++) {
+    for (var y = 7; y >= 0; y--) {
         var row = $(document.createElement('div')).prop({
             class: 'layout-row'
         });
         
         for (var x = 0; x < 8; x++) {
-            var value = getselectedLayoutByXY(variant, x, y);
-            if (value < 10) {
+            var value = bitIndexToLayout1(variant, x + y * 8);
+            if (value == undefined) {
+                value = ".."
+            } else if (value < 10) {
                 value = '0' + value;
             }
             
@@ -73,45 +71,45 @@ function generateLayout(layout, variant) {
 function generateBitboard(bitboard, decTextbox, readOnly) {
 	// Add bottom div for column buttons
 	if (!readOnly) {
-		var bottomrow = $(document.createElement('div')).prop({
+		var bottom_row = $(document.createElement('div')).prop({
 			class: 'bitboard-row'
 		});
 	}
 	
-	for (var y = 0; y < 8; y++) {
+	for (var y = 6; y >= 0; y--) {
 		var row = $(document.createElement('div')).prop({
 			class: 'bitboard-row'
 		});
 		
 		// Add buttons to fill a row
 		if (!readOnly){
-			var rowbutton = $(document.createElement('button')).prop({
+			var row_button = $(document.createElement('button')).prop({
 				type: 'rowbutton',
 				value: y,
 				id: y,
 				class: "btn btn-primary",
 			});
 			
-			rowbutton.click(((v) => () => rowClick(bitboard, decTextbox, v))(y))
+			row_button.click(((v) => () => rowClick(bitboard, decTextbox, v))(y))
 		}
 		
 		// Buttons to fill columns
-		const files =  ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+		const files =  ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 		if (!readOnly) {
 			var colbutton = $(document.createElement('button')).prop({
 				type: 'colbutton',
 				value: files[y],
 				id: y,
 				class: "btn btn-primary",
-				style: y == 0 ? "margin-left: 22px" : ""
+				style: y == 6 ? "margin-left: 20px" : ""
 			});
 			
 			colbutton.click(((v) => () => colClick(bitboard, decTextbox, v))(files[y]))
 		}
 		
 		// Checkboxes
-		for (var x = 0; x < 8; x++) {
-			var value = x + y * 8;
+		for (var x = 0; x < 7; x++) {
+			var value = x + y * 7;
 			var checkbox = $(document.createElement('input')).prop({
 				type: 'checkbox',
 				value: value,
@@ -124,11 +122,11 @@ function generateBitboard(bitboard, decTextbox, readOnly) {
 			checkbox.click(((v) => () => bitboardCheckboxClick(bitboard, decTextbox, v))(value));
 			
 			if (!readOnly) {
-				row.prepend(rowbutton);
+				row.prepend(row_button);
 			}
 				
 			if (!readOnly) {
-				bottomrow.append(colbutton);
+				bottom_row.append(colbutton);
 			}
 			
 			row.append(checkbox);
@@ -137,7 +135,7 @@ function generateBitboard(bitboard, decTextbox, readOnly) {
 		bitboard.append(row);
 		
 		if (!readOnly) {
-			bitboard.append(bottomrow)
+			bitboard.append(bottom_row)
 		};
 
 	}
@@ -218,15 +216,16 @@ function updateBitboard(bitboard, value) {
         var bit = value & 1n;
         value = value >> 1n;
         
-        var bitboardIndex = getselectedLayoutByIndex(selectedLayout, index);
-        bitboard.find('input[type=checkbox][value=' + bitboardIndex + ']').prop('checked', bit != 0);
+        var bitboardIndex = bitIndexToLayout1(selectedLayout, index);
+        if (bitboardIndex < 7 * 7)
+            bitboard.find('input[type=checkbox][value=' + bitboardIndex + ']').prop('checked', bit != 0);
     }
 }
 
 function bitboardCheckboxClick(bitboard, decTextbox, index) {
     var checkbox = bitboard.find('input[type=checkbox][value=' + index + ']');
     var state = checkbox.prop('checked');
-    var variantIndex = BigInt(getselectedLayoutByIndex(selectedLayout, index));
+    var variantIndex = BigInt(bitIndexToLayout1(selectedLayout, index));
     var value = BigInt(decTextbox.val());
     value = (value & ~(1n << variantIndex)) | (BigInt(state ? 1 : 0) << variantIndex);
     decTextbox.val(value);
@@ -236,10 +235,10 @@ function bitboardCheckboxClick(bitboard, decTextbox, index) {
 
 function rowClick(bitboard, decTextbox, rank){
     // Magic number is a fully filled 8th rank
-    var toprow = 18374686479671623680n;
+    var toprow = rank1(selectedLayout);
     // Inverse the shiftvalue for different layouts
     var shiftval = BigInt(calcRowShiftValue(selectedLayout, rank));
-    var row = toprow >> (shiftval * 8n);
+    var row = toprow << shiftval;
     // OR the existing field and the newly filled row
     var newvalue = BigInt(decTextbox.val()) | row;
 
@@ -254,12 +253,12 @@ function rowClick(bitboard, decTextbox, rank){
 }
 
 function colClick(bitboard, decTextbox, file){
-    const files =  ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const files =  ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     file = BigInt(files.indexOf(file));
     // Magic number is a fully filled H file
-    var rightcol = 9259542123273814144n;
+    var rightcol = fileG(selectedLayout);
     // Inverse the shiftvalue for different layouts
-    var shiftval = calcColShiftValue(selectedLayout, 7n - file);
+    var shiftval = calcColShiftValue(selectedLayout, file);
     var col =  rightcol >> shiftval;
     // OR the existing field and the newly filled col
     var newvalue = BigInt(decTextbox.val()) | col;
@@ -275,7 +274,7 @@ function colClick(bitboard, decTextbox, file){
 }
 
 function fillBitboard(decTextbox) {
-    decTextbox.val('18446744073709551615');
+    decTextbox.val(allSquares(selectedLayout).toString(10));
     refreshValuesAfterLayoutChange();
 }
 
@@ -286,12 +285,7 @@ function clearBitboard(decTextbox) {
 
 function shlBitboard(decTextbox) {
     var value = BigInt(decTextbox.val());
-    var lastBitValue = value & (1n << 63n);
-    if(lastBitValue != 0n) {
-        value = value & ~lastBitValue; 
-    }
-
-    value = value << 1n;
+    value = (value << 1n) & allSquares(selectedLayout);
     decTextbox.val(value);
     
     refreshValuesAfterLayoutChange();
@@ -299,7 +293,7 @@ function shlBitboard(decTextbox) {
 
 function shrBitboard(decTextbox) {
     var value = BigInt(decTextbox.val());
-    value = value >> 1n & ~(1n << 63n);
+    value = (value >> 1n) & allSquares(selectedLayout);
     decTextbox.val(value);
     
     refreshValuesAfterLayoutChange();
@@ -307,41 +301,57 @@ function shrBitboard(decTextbox) {
 
 function notBitboard(decTextbox) {
     var value = BigInt(decTextbox.val());
-    value = 18446744073709551615n - value;
+    value = allSquares(selectedLayout) ^ value;
     decTextbox.val(value);
     
     refreshValuesAfterLayoutChange();
 }
 
-function getselectedLayoutByXY(variant, x, y) {
+// input: bit index (0-63) -> layout1 (0-48)
+function bitIndexToLayout1(variant, idx) {
     switch (variant) {
-        case 1: return 63 - (7 - x + y * 8);
-        case 2: return 63 - (x + y * 8);
-        case 3: return x + y * 8;
-        case 4: return 7 - x + y * 8;
+        case 1:
+            return idx >= 7 * 7 ? undefined : idx;
+        case 2:
+            x = idx % 8;
+            y = Math.floor(idx / 8);
+            return x == 7 || y == 7 ? undefined : x + y * 7;
     }
     
     return 0;
 }
 
-function getselectedLayoutByIndex(variant, index) {
-    return getselectedLayoutByXY(variant, index % 8, Math.floor(index / 8));
-}
-
 function calcRowShiftValue(variant, value) {
     switch (variant) {
-        case 1: return value;
-        case 2: return value;
-        case 3: return 7 - value;
-        case 4: return 7 - value;
+        case 1: return value * 7;
+        case 2: return value * 8;
     }
 }
 
 function calcColShiftValue(variant, value) {
     switch (variant) {
         case 1: return value;
-        case 2: return 7n - value;
-        case 3: return value;
-        case 4: return 7n - value;
+        case 2: return value;
+    }
+}
+
+function allSquares(variant) {
+    switch (variant) {
+        case 1: return 0x1ffffffffffffn
+        case 2: return 0x7f7f7f7f7f7f7fn
+    }
+}
+
+function fileG(variant) {
+    switch (variant) {
+        case 1: return 0x1020408102040n
+        case 2: return 0x40404040404040n
+    }
+}
+
+function rank1(variant) {
+    switch (variant) {
+        case 1: return 0x000000000007fn
+        case 2: return 0x7fn
     }
 }
